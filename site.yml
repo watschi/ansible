@@ -1,0 +1,3 @@
+---
+# site.yml Master Playbook
+- include: common.yml
