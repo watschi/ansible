@@ -1,0 +1,6 @@
+---
+# base.yml Playbook für Basiskonfiguration
+- hosts: all
+  become: yes
+  roles:
+    - common

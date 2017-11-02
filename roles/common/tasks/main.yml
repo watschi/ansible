@@ -1,0 +1,19 @@
+---
+# tasks file for base
+- name: "Install basic packages"
+  apt: name={{ item }} state=installed
+  with_items:
+  - vim
+  - htop
+  - git
+  - curl
+  - tree
+  - ncdu
+
+- name: "Disable passwordauthentication"
+  lineinfile: 
+    path: /etc/ssh/sshd_config
+    regexp: '^#PasswordAuthentication yes'
+    line: 'PasswordAuthentication no'
+    state: present 
+    backrefs: yes
