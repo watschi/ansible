@@ -1,0 +1,6 @@
+---
+# kube.yml playbook configuring kubernetes kubes
+- hosts: kubes
+  become: yes
+  roles:
+    - kube

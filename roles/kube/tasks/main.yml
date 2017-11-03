@@ -1,0 +1,87 @@
+---
+# tasks file for roles/kube
+
+- name: get kernel release
+  shell: uname -r
+  register: kernel_release
+
+- name: get distro release
+  shell: lsb_release -cs
+  register: lsb_release
+
+- name: add docker apt key
+  apt_key:
+    url: https://download.docker.com/linux/ubuntu/gpg
+    state: present
+
+- name: add kubernetes apt key
+  apt_key:
+    url: https://packages.cloud.google.com/apt/doc/apt-key.gpg
+    state: present
+
+- name: add docker apt repository
+  apt_repository:
+    repo: "deb [arch=amd64] https://download.docker.com/linux/ubuntu {{ lsb_release.stdout }} stable"
+    state: present
+    filename: 'docker'
+
+- name: add kubernetes repository
+  apt_repository:
+    repo: "deb http://apt.kubernetes.io/ kubernetes-xenial main"
+    state: present
+    filename: 'kubernetes'
+
+- name: install extra kernel drivers
+  apt:
+    name: "{{ item }}"
+    state: present
+  with_items:
+    - linux-image-extra-{{ kernel_release.stdout }}
+    - linux-image-extra-virtual
+
+- name: install required packages for docker
+  apt:
+    name: "{{ item }}"
+    state: present
+  with_items:
+    - apt-transport-https
+    - ca-certificates
+    - curl
+    - software-properties-common
+
+- name: install docker
+  apt:
+    name: docker-ce
+    state: present
+
+- name: install kubernetes packages
+  apt:
+    name: "{{ item }}"
+    state: present
+  with_items:
+    - kubelet
+    - kubeadm
+    - kubectl
+    - kubernetes-cni
+
+- name: set bridge.bridge-nf-call-iptables to 1
+  sysctl:
+    name: net.bridge.bridge-nf-call-iptables
+    value: 1
+    sysctl_set: yes
+
+- name: set docker cgroup driver in daemon,json
+  copy:
+    src: daemon.json
+    dest: /etc/docker/daemon.json
+    owner: root
+    group: root
+    mode: 0600
+
+- name: set kubelet cgroup driver in service file
+  copy:
+    src: 10-kubeadm.conf
+    dest: /etc/systemd/system/kubelet.service.d/10-kubeadm.conf
+    owner: root
+    group: root
+    mode: 0640
